@@ -3,7 +3,7 @@ session_start();
 
 // Check if the user is logged in, if not then redirect to login page
 if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
-    header("location: index.html"); // Assuming your login page is index.html
+    header("location: index.php"); // Assuming your login page is index.html
     exit;
 }
 ?>
