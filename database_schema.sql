@@ -14,6 +14,7 @@ CREATE TABLE users (
     country VARCHAR(100) NULL,
     gender VARCHAR(20) NULL,
     date_of_birth DATE NULL,
+    last_activity DATETIME DEFAULT CURRENT_TIMESTAMP NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 
@@ -37,4 +38,5 @@ CREATE TABLE tasks (
 --    ALTER TABLE users ADD COLUMN country VARCHAR(100) NULL AFTER phone_no;
 --    ALTER TABLE users ADD COLUMN gender VARCHAR(20) NULL AFTER country;
 --    ALTER TABLE users ADD COLUMN date_of_birth DATE NULL AFTER gender;
+--    ALTER TABLE users ADD COLUMN last_activity DATETIME DEFAULT CURRENT_TIMESTAMP NULL AFTER date_of_birth;
 -- 4. Run this SQL script (or relevant parts) to create/update the tables.
