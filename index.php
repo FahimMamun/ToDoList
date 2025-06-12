@@ -35,6 +35,62 @@ if (isset($_SESSION['loggedin']) && $_SESSION['loggedin'] === true) {
                        placeholder="••••••••">
             </div>
 
+            <div id="registrationFields" class="hidden">
+                <div class="mb-6">
+                    <label for="first_name" class="block text-gray-700 text-sm font-semibold mb-2">First Name</label>
+                    <input type="text" id="first_name" name="first_name" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+                           placeholder="John">
+                </div>
+
+                <div class="mb-6">
+                    <label for="last_name" class="block text-gray-700 text-sm font-semibold mb-2">Last Name</label>
+                    <input type="text" id="last_name" name="last_name" required
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+                           placeholder="Doe">
+                </div>
+
+                <div class="mb-6">
+                    <label for="phone_no" class="block text-gray-700 text-sm font-semibold mb-2">Phone Number (Optional)</label>
+                    <input type="tel" id="phone_no" name="phone_no"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150"
+                           placeholder="+1234567890">
+                </div>
+
+                <div class="mb-6">
+                    <label for="date_of_birth" class="block text-gray-700 text-sm font-semibold mb-2">Date of Birth (Optional)</label>
+                    <input type="date" id="date_of_birth" name="date_of_birth"
+                           class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                </div>
+
+                <div class="mb-6">
+                    <label for="gender" class="block text-gray-700 text-sm font-semibold mb-2">Gender (Optional)</label>
+                    <select id="gender" name="gender"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                        <option value="prefer_not_to_say">Prefer not to say</option>
+                    </select>
+                </div>
+
+                <div class="mb-6">
+                    <label for="country" class="block text-gray-700 text-sm font-semibold mb-2">Country (Optional)</label>
+                    <select id="country" name="country"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 transition duration-150">
+                        <option value="">Select Country</option>
+                        <option value="USA">United States</option>
+                        <option value="Canada">Canada</option>
+                        <option value="UK">United Kingdom</option>
+                        <option value="Australia">Australia</option>
+                        <option value="India">India</option>
+                        <option value="Germany">Germany</option>
+                        <option value="France">France</option>
+                    </select>
+                </div>
+            </div>
+
             <div id="messageArea" class="mb-4 text-sm"></div>
 
             <div>

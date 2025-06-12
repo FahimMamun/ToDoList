@@ -20,7 +20,7 @@ if (!isset($_SESSION["loggedin"]) || $_SESSION["loggedin"] !== true) {
     <nav class="bg-blue-600 p-4 text-white flex justify-between items-center">
         <h1 class="text-xl font-semibold">ToDo App</h1>
         <div>
-            <span class="mr-4">Welcome, <?php echo htmlspecialchars($_SESSION["email"]); ?>!</span>
+            <span class="mr-4">Welcome, <?php echo isset($_SESSION["first_name"]) && !empty($_SESSION["first_name"]) ? htmlspecialchars($_SESSION["first_name"]) : htmlspecialchars($_SESSION["email"] ?? 'User'); ?>!</span>
             <a href="actions/logout_action.php" class="bg-red-500 hover:bg-red-600 text-white font-bold py-2 px-4 rounded transition duration-150">Logout</a>
         </div>
     </nav>

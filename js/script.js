@@ -1,6 +1,5 @@
-// Will be renamed to js/script.js and populated later
 document.addEventListener('DOMContentLoaded', function () {
-    console.log('Auth Page Loaded');
+    console.log('Auth Page Loaded'); // As per user's latest full code block
 
     const formTitle = document.getElementById('formTitle');
     const authForm = document.getElementById('authForm');
@@ -8,27 +7,62 @@ document.addEventListener('DOMContentLoaded', function () {
     const toggleToRegisterLink = document.getElementById('toggleToRegisterLink');
     const toggleToLoginLink = document.getElementById('toggleToLoginLink');
     const messageArea = document.getElementById('messageArea');
+    const registrationFields = document.getElementById('registrationFields');
 
-    let isLoginMode = true;
+    let isLoginMode = true; // Initial state is login mode
+
+    /**
+     * Displays a message in the messageArea with appropriate styling.
+     * @param {string} message - The message to display.
+     * @param {'success' | 'error' | 'info'} type - The type of message to determine styling.
+     */
+    function displayMessage(message, type = 'info') {
+        messageArea.textContent = message;
+        let className = 'mb-4 text-sm text-center';
+        if (type === 'success') {
+            className += ' text-green-600';
+        } else if (type === 'error') {
+            className += ' text-red-600';
+        } else { // info or default
+            className += ' text-gray-700';
+        }
+        messageArea.className = className;
+    }
 
     function toggleMode() {
         isLoginMode = !isLoginMode;
+
         if (isLoginMode) {
             formTitle.textContent = 'Login';
             submitButton.textContent = 'Login';
             toggleToRegisterLink.classList.remove('hidden');
             toggleToLoginLink.classList.add('hidden');
-            authForm.action = 'actions/login_action.php'; // Update action
+            if (registrationFields) {
+                registrationFields.classList.add('hidden');
+                // Remove required attribute from all inputs within registration fields
+                registrationFields.querySelectorAll('input, select').forEach(input => input.removeAttribute('required'));
+            }
+            authForm.action = 'actions/login_action.php';
         } else {
             formTitle.textContent = 'Register';
             submitButton.textContent = 'Register';
             toggleToRegisterLink.classList.add('hidden');
             toggleToLoginLink.classList.remove('hidden');
-            authForm.action = 'actions/register_action.php'; // Update action
+            if (registrationFields) {
+                registrationFields.classList.remove('hidden');
+                // Add required attribute to necessary inputs within registration fields
+                const firstNameField = document.getElementById('first_name'); // Get by ID
+                const lastNameField = document.getElementById('last_name');   // Get by ID
+                if (firstNameField) firstNameField.setAttribute('required', 'required');
+                if (lastNameField) lastNameField.setAttribute('required', 'required');
+            }
+            authForm.action = 'actions/register_action.php';
         }
-        messageArea.textContent = ''; // Clear messages
-        authForm.reset(); // Reset form fields
+
+        displayMessage('');
+        authForm.reset();
     }
+
 
     toggleToRegisterLink.addEventListener('click', function (e) {
         e.preventDefault();
@@ -40,40 +74,80 @@ document.addEventListener('DOMContentLoaded', function () {
         toggleMode();
     });
 
-    // Placeholder for form submission handling
-    authForm.addEventListener('submit', function(e) {
+    authForm.addEventListener('submit', function (e) {
         e.preventDefault();
-        messageArea.textContent = ''; // Clear previous messages
+        displayMessage('');
+
+        const allInputs = authForm.querySelectorAll('input, select');
+        if (isLoginMode && registrationFields) { // Only do this if in login mode
+            registrationFields.querySelectorAll('input, select').forEach(input => {
+                 if (input.id === 'first_name' || input.id === 'last_name') {
+                    input.removeAttribute('required');
+                }
+            });
+        }
+
 
         const formData = new FormData(authForm);
-        const actionUrl = isLoginMode ? 'actions/login_action.php' : 'actions/register_action.php';
+        const actionUrl = authForm.action;
+
+        displayMessage('Processing...', 'info');
+        submitButton.disabled = true;
 
         fetch(actionUrl, {
             method: 'POST',
             body: formData
         })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                messageArea.textContent = data.message;
-                messageArea.style.color = 'green';
-                if (data.redirect) {
-                    window.location.href = data.redirect;
-                } else if (!isLoginMode) {
-                    // If registration was successful, switch to login mode
-                    toggleMode();
-                    messageArea.textContent = 'Registration successful! Please login.';
-                    messageArea.style.color = 'green';
+            .then(response => {
+                if (!response.ok) {
+                    return response.json().catch(() => {
+                        throw new Error(`HTTP error! status: ${response.status} - Could not parse error response from ${actionUrl}.`);
+                    }).then(errData => {
+                        throw new Error(errData.message || `HTTP error! status: ${response.status} from ${actionUrl}.`);
+                    });
                 }
-            } else {
-                messageArea.textContent = data.message || 'An error occurred.';
-                messageArea.style.color = 'red';
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            messageArea.textContent = 'An error occurred. Please try again.';
-            messageArea.style.color = 'red';
-        });
+                return response.json();
+            })
+            .then(data => {
+                if (data.success) {
+                    displayMessage(data.message || 'Operation successful!', 'success');
+                    if (data.redirect) {
+                        setTimeout(() => {
+                            window.location.href = data.redirect;
+                        }, 500);
+                    } else if (!isLoginMode && actionUrl.includes('register_action.php')) {
+                        toggleMode();
+                        displayMessage(data.message || 'Registration successful! Please login.', 'success');
+                    }
+                } else {
+                    displayMessage(data.message || 'An error occurred.', 'error');
+                    if (data.debug || data.debug_info || data.debug_info_on_error || data.FORCED_DEBUG_OUTPUT) {
+                        console.warn('Server Debug Info:', data.debug || data.debug_info || data.debug_info_on_error || data.FORCED_DEBUG_OUTPUT);
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Fetch Error:', error);
+                displayMessage(error.message || 'A network error occurred. Please try again.', 'error');
+            })
+            .finally(() => {
+                submitButton.disabled = false;
+            });
     });
+
+    // Initialize to Login mode
+    isLoginMode = false;
+    toggleMode();
+
+
 });
+
+// Placeholder logout handler from user's provided code - will not be active with our PHP logout
+const logoutForm = document.querySelector('form[action="logout.php"]');
+if (logoutForm) {
+    logoutForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        await new Promise(resolve => setTimeout(resolve, 500));
+        window.location.href = window.location.pathname;
+    });
+}
