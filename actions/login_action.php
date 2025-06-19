@@ -4,9 +4,10 @@ require_once '../includes/db_connect.php';
 
 header('Content-Type: application/json');
 $response = ['success' => false, 'message' => 'Invalid request.'];
-$debug_info = [ // Initialize debug info array
+$debug_info = [
     'request_method' => $_SERVER['REQUEST_METHOD'] ?? 'UNKNOWN',
-    'post_data' => $_POST
+    'post_data' => $_POST,
+    'session_status' => session_status() // Added for more debug context
 ];
 
 if (!$link) {
@@ -16,7 +17,6 @@ if (!$link) {
     exit;
 }
 
-// Basic validation for POST request and expected fields
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_POST['password'])) {
     $email = trim($_POST['email']);
     $password = trim($_POST['password']);
@@ -26,8 +26,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
     } elseif (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
         $response['message'] = 'Invalid email format.';
     } else {
-        // Prepare a select statement to get user details including first_name and last_name
-        $sql = "SELECT id, email, password, first_name, last_name FROM users WHERE email = ?";
+        $sql = "SELECT id, email, password, first_name, last_name, is_verified FROM users WHERE email = ?";
 
         if ($stmt = mysqli_prepare($link, $sql)) {
             mysqli_stmt_bind_param($stmt, "s", $param_email);
@@ -37,39 +36,44 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
                 mysqli_stmt_store_result($stmt);
 
                 if (mysqli_stmt_num_rows($stmt) == 1) {
-                    // Declare variables for binding results
                     $id = null;
                     $db_email = null;
                     $hashed_password = null;
                     $first_name = null;
                     $last_name = null;
+                    $is_verified = 0; // Default to 0 (false)
 
-                    mysqli_stmt_bind_result($stmt, $id, $db_email, $hashed_password, $first_name, $last_name);
+                    mysqli_stmt_bind_result($stmt, $id, $db_email, $hashed_password, $first_name, $last_name, $is_verified);
 
                     if (mysqli_stmt_fetch($stmt)) {
                         if (password_verify($password, $hashed_password)) {
-                            // Password is correct, so start/regenerate session
-                            session_regenerate_id(true); // Regenerate session ID for security
+                            // Password is correct, now check if account is verified
+                            if ($is_verified == 1 || $is_verified === true) { // Check for 1 or true
+                                session_regenerate_id(true);
 
-                            $_SESSION["loggedin"] = true;
-                            $_SESSION["id"] = $id;
-                            $_SESSION["email"] = $db_email;
-                            $_SESSION["first_name"] = $first_name; // Store first name
-                            $_SESSION["last_name"] = $last_name;   // Store last name
+                                $_SESSION["loggedin"] = true;
+                                $_SESSION["id"] = $id;
+                                $_SESSION["email"] = $db_email;
+                                $_SESSION["first_name"] = $first_name;
+                                $_SESSION["last_name"] = $last_name;
 
-                            $response['success'] = true;
-                            $response['message'] = 'Login successful!';
-                            $response['redirect'] = 'dashboard.php';
+                                $response['success'] = true;
+                                $response['message'] = 'Login successful!';
+                                $response['redirect'] = 'dashboard.php';
+                            } else {
+                                // Account is not verified
+                                $response['success'] = false; // Ensure success is false
+                                $response['message'] = 'Your account is not verified. Please check your email for the verification code.';
+                                // $response['needs_verification'] = true; // Optional flag for frontend
+                            }
                         } else {
-                            // Password is not valid
                             $response['message'] = 'Invalid email or password.';
                         }
                     } else {
-                         $response['message'] = 'Error fetching user data after verification.';
+                         $response['message'] = 'Error fetching user data after query execution.';
                     }
                 } else {
-                    // Email doesn't exist
-                    $response['message'] = 'Invalid email or password.';
+                    $response['message'] = 'Invalid email or password.'; // Email not found
                 }
             } else {
                 $response['message'] = 'Error executing login query: ' . mysqli_stmt_error($stmt);
@@ -80,13 +84,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['email']) && isset($_PO
         }
     }
 } else {
-    // If not POST or email/password not set, update message if it's still the default
-    if ($response['message'] === 'Invalid request.') {
+    if ($response['message'] === 'Invalid request.') { // Only overwrite if it's the default generic one
         $response['message'] = 'Invalid request method or missing credentials.';
     }
 }
 
-// Add debug info if there was an error
 if (!$response['success']) {
     $response['debug_info_on_error'] = $debug_info;
 }
